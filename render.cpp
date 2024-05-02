@@ -56,23 +56,7 @@ int main() {
     transferMem(h_fb, d_fb);
 
 
-
-    // Output FB as Image to stdout
-    /*
-    std::cout << "P3\n" << nx << " " << ny << "\n255\n";
-    for (int j = ny-1; j >= 0; j--) {
-        for (int i = 0; i < nx; i++) {
-            size_t pixel_index = j*3*nx + i*3;
-            float r = h_fb[pixel_index + 0];
-            float g = h_fb[pixel_index + 1];
-            float b = h_fb[pixel_index + 2];
-            int ir = int(255.99*r);
-            int ig = int(255.99*g);
-            int ib = int(255.99*b);
-            std::cout << ir << " " << ig << " " << ib << "\n";
-        }
-    }
-    */
+   //float* h_floatFb = vecToFb(h_fb);
     
 
     mainLoop(applicationWindow,h_fb);
@@ -80,6 +64,7 @@ int main() {
     //deallocates
     freeGPU(d_fb);
     free(h_fb);
+    //free(h_floatFb);
 
     //cleaning nd quit routine
     SDL_DestroyWindow(applicationWindow);
@@ -88,7 +73,7 @@ int main() {
     return 0;
 }
 
-void mainLoop(SDL_Window *window,vec3* fb) {
+void mainLoop(SDL_Window *window,vec3 * fb) {
 
     bool gQuit = false;
 
@@ -106,8 +91,9 @@ void mainLoop(SDL_Window *window,vec3* fb) {
 }
 
 void Draw(SDL_Window *window,vec3 *fb) {
+    //glDrawPixels(640,480,GL_RGB,GL_FLOAT,fb);
     glDrawPixels(640,480,GL_RGB,GL_FLOAT,fb);
-    
+
 }
 
 bool Input() {
@@ -120,4 +106,19 @@ bool Input() {
         }
     }
     return false;
+}
+
+float* vecToFb(vec3* h_fb) {
+    int num_pixels = nx*ny;
+    float* newbuffer = (float*)malloc(3*num_pixels*sizeof(float));
+    int j = 0;
+
+    for(int i = 0; i < num_pixels*3; i+=3) {
+        newbuffer[i] = (h_fb[j]).x();
+        newbuffer[i+1] = (h_fb[j]).y();
+        newbuffer[i+2] = (h_fb[j]).z();
+        j++;
+    }
+
+    return newbuffer;
 }

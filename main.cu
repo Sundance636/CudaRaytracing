@@ -10,10 +10,10 @@ __global__ void render(vec3 *frameBuffer, int pixels_x, int pixels_y) {
 
     int pixel_index = j*pixels_x + i;
 
-    vec3 temp(float(i) / pixels_x, float(j) / pixels_y, 0.2f);
+    //vec3 temp(float(i) / pixels_x, float(j) / pixels_y, 0.2f);
 
     //overload assignment
-    (frameBuffer[pixel_index]) = temp;
+    (frameBuffer[pixel_index]) = vec3(float(i) / pixels_x, float(j) / pixels_y, 0.2f);
 
     /*
     frameBuffer[pixel_index + 0] = float(i) / pixels_x;
@@ -71,7 +71,7 @@ void freeGPU(vec3* d_fb) {
 
 void transferMem(vec3* h_fb,vec3* d_fb) {
     int num_pixels = nx*ny;
-    size_t fb_size = num_pixels*sizeof(float);
+    size_t fb_size = 3*num_pixels*sizeof(float);
     std::cout << "Device frame buffer address: " << d_fb << "\n";
     std::cout << "Host frame buffer address: " << h_fb << "\n";
     std::cout << "FrameBuffer Size: " << fb_size << "\n";

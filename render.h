@@ -7,7 +7,8 @@
 #define false 0u
 #define true 1u
 
-void mainLoop(SDL_Window *,vec3*);
+void mainLoop(SDL_Window *,vec3 *);
 bool Input();
 //void preDraw();
-void Draw(SDL_Window*, vec3*);
+float* vecToFb(vec3*);
+void Draw(SDL_Window*, vec3 *);
