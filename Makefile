@@ -1,51 +1,45 @@
-CC=g++
-CFLAGS=-Wall
+CXX=g++
+CXXFLAGS=-Wall
 LDFLAGS=-lSDL2 -ldl
 LDLIBS=/opt/cuda/lib/ -lcudart -lGL
 CUDAINC=/opt/cuda/include/
 NVCC=nvcc
 
+CU_FILES := $(wildcard *.cu)
+CPP_FILES := $(wildcard *.cpp)
 
-default:
-# Compile CUDA source file
-	nvcc -dc main.cu  -o main.o
-	nvcc -dc vec3.cu -o vec3.o
+CU_OBJECTS := $(CU_FILES:.cu=.o)
+CPP_OBJECTS := $(CPP_FILES:.cpp=.o)
+
+BIN=Raytracer
+
+default: $(BIN)
+# Compile CUDA source files
+
+%.o: %.cu
+	$(NVCC) -dc $<  -o $@
 
 # Compile C++ source files
-# 	g++ -Wall render.cpp -c -lSDL2 -ldl -o render.o
-	$(CC) $(CFLAGS) render.cpp -c $(LDFLAGS) -o render.o -I$(CUDAINC)
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $< -c $(LDFLAGS) -o $@ -I$(CUDAINC)
 
 # device linking stage
-	nvcc -dlink render.o main.o vec3.o -o linked.o
-
-# Link object files	
-#	g++ main.o render.o -o cudaT -lSDL2 -ldl -L/opt/cuda/lib/ -lcudart -lGL
-	$(CC) linked.o main.o vec3.o render.o -o cudaT $(LDFLAGS) -L$(LDLIBS)
-
-	./cudaT
-
-cuda:
-	nvcc main.cu -o cudaT
-	nvprof ./cudaT > img.ppm
-	loupe ./img.ppm
-
-cuda2:
-# Compile CUDA source file
-	nvcc -c main.cu -o main.o
-
-# Compile C++ source files
-	g++ -Wall render.cpp -c -lSDL2 -ldl -o render.o
+linked.o: $(CPP_OBJECTS) $(CU_OBJECTS)
+	$(NVCC) -dlink $(CPP_OBJECTS) $(CU_OBJECTS) -o $@
 
 # Link object files
-	g++ main.o render.o -o cudaT -lSDL2 -ldl -L/opt/cuda/lib/ -lcudart -lGL
-# profiling
-	nvprof ./cudaT > img.ppm
+$(BIN): linked.o
+#	g++ main.o render.o -o cudaT -lSDL2 -ldl -L/opt/cuda/lib/ -lcudart -lGL
+	$(CXX) linked.o $(CPP_OBJECTS) $(CU_OBJECTS) -o $(BIN) $(LDFLAGS) -L$(LDLIBS)
 
-# launch initiallyy rendered image in loupe
-#	loupe ./img.ppm
+	./$(BIN)
 
 install:
 # do nothing for now
 
+profile:
+# debug build with nvprof?
+
 clean:
 	rm ./*.o
+	rm ./$(BIN)
