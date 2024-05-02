@@ -1,4 +1,5 @@
 #include "gpu.h"
+#include "vec3.h"
 
 
 __global__ void render(float *frameBuffer, int pixels_x, int pixels_y) {
