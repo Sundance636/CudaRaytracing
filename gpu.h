@@ -1,4 +1,5 @@
 #include <iostream>
+
 #define checkCudaErrors(val) check_cuda( (val), #val, __FILE__, __LINE__ )
 
 #define nx 640

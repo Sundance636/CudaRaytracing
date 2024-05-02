@@ -1,5 +1,6 @@
 #include "render.h"
 #include "gpu.h"
+#include "vec3.h"
 
 int main() {
 
@@ -34,6 +35,8 @@ int main() {
     // allocate space for Frame Buffer
     float *h_fb = nullptr;
     float *d_fb = nullptr;
+
+    vec3 testVector(0.1f,0.2f,0.3f);// = vec3::vec3(0.1,0.2,0.3);
 
 
 
