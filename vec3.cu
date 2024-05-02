@@ -23,3 +23,11 @@ __host__ __device__ float vec3::z() {
     return this->e[2];
 
 }
+
+__host__ __device__ vec3 vec3::operator=(const vec3 &otherVector) {
+    this->e[0] = otherVector.e[0];
+    this->e[1] = otherVector.e[1];
+    this->e[2] = otherVector.e[2];
+
+    return *this;
+}

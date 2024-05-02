@@ -1,6 +1,5 @@
 #include "render.h"
 #include "gpu.h"
-#include "vec3.h"
 
 int main() {
 
@@ -33,18 +32,18 @@ int main() {
     }
 
     // allocate space for Frame Buffer
-    float *h_fb = nullptr;
-    float *d_fb = nullptr;
+    vec3 *h_fb = nullptr;
+    vec3 *d_fb = nullptr;
 
-    vec3 testVector(0.1f,0.2f,0.3f);// = vec3::vec3(0.1,0.2,0.3);
+    //vec3 testVector(0.1f,0.2f,0.3f);// = vec3::vec3(0.1,0.2,0.3);
 
 
 
     int num_pixels = nx*ny;
-    size_t fb_size = 3*num_pixels*sizeof(float);
-    h_fb = (float*)malloc(fb_size);
+    size_t fb_size = num_pixels*sizeof(vec3);
+    h_fb = (vec3*)malloc(fb_size);
 
-    d_fb = (float*)allocateFb(d_fb);
+    d_fb = (vec3*)allocateFb(d_fb);
     //std::cout << d_fb << "\n";
 
 
@@ -53,7 +52,7 @@ int main() {
     int ty = 8;
 
     // Render our buffer
-    renderBuffer(d_fb, h_fb, tx, ty);
+    renderBuffer(d_fb, tx, ty);
     transferMem(h_fb, d_fb);
 
 
@@ -89,7 +88,7 @@ int main() {
     return 0;
 }
 
-void mainLoop(SDL_Window *window,float* fb) {
+void mainLoop(SDL_Window *window,vec3* fb) {
 
     bool gQuit = false;
 
@@ -106,7 +105,7 @@ void mainLoop(SDL_Window *window,float* fb) {
 
 }
 
-void Draw(SDL_Window *window,float *fb) {
+void Draw(SDL_Window *window,vec3 *fb) {
     glDrawPixels(640,480,GL_RGB,GL_FLOAT,fb);
     
 }

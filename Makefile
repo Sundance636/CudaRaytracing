@@ -8,16 +8,19 @@ NVCC=nvcc
 
 default:
 # Compile CUDA source file
-	nvcc -c main.cu -o main.o
-	nvcc -c vec3.cu -o vec3.o
+	nvcc -dc main.cu  -o main.o
+	nvcc -dc vec3.cu -o vec3.o
 
 # Compile C++ source files
 # 	g++ -Wall render.cpp -c -lSDL2 -ldl -o render.o
 	$(CC) $(CFLAGS) render.cpp -c $(LDFLAGS) -o render.o -I$(CUDAINC)
 
-# Link object files
+# device linking stage
+	nvcc -dlink render.o main.o vec3.o -o linked.o
+
+# Link object files	
 #	g++ main.o render.o -o cudaT -lSDL2 -ldl -L/opt/cuda/lib/ -lcudart -lGL
-	$(CC) main.o vec3.o render.o -o cudaT $(LDFLAGS) -L$(LDLIBS)
+	$(CC) linked.o main.o vec3.o render.o -o cudaT $(LDFLAGS) -L$(LDLIBS)
 
 	./cudaT
 
