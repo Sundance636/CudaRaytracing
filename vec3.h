@@ -23,6 +23,7 @@ class vec3 {
         __host__ __device__ vec3 operator=(const vec3 &otherVector);
         //__host__ __device__ vec3 operator*(float);//define scaling vectors
         __host__ __device__ vec3 operator+(const vec3 &vector);//vector addition
+        __host__ __device__ vec3 operator-(const vec3 &vector);//vector subtraction
         //__host__ __device__ vec3 operator*( const vec3 &vector, float scalar);
 
         __host__ __device__ float magnitude();
@@ -38,5 +39,6 @@ __host__ __device__ vec3 operator+(const vec3&, const vec3&);
 
 //Vector operations
 __device__ vec3 unit_vector(vec3);
+__device__ float dot_product(vec3,vec3);
 
 #endif

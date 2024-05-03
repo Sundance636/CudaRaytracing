@@ -24,10 +24,6 @@ __host__ __device__ float vec3::z() const {
 
 }
 
-__host__ __device__ float vec3::magnitude() {
-    return sqrtf( (this->e[0] * this->e[0]) + (this->e[1]*this->e[1]) + (this->e[2]*this->e[2]) );
-}
-
 __host__ __device__ vec3 vec3::operator=(const vec3 &otherVector) {
     this->e[0] = otherVector.e[0];
     this->e[1] = otherVector.e[1];
@@ -41,6 +37,13 @@ __host__ __device__ vec3 vec3::operator+(const vec3 &vector) {
     this->e[0] = this->e[0] + vector.e[0];
     this->e[1] = this->e[1] + vector.e[1];
     this->e[2] = this->e[2] + vector.e[2];
+    return *this;
+}
+
+__host__ __device__ vec3 vec3::operator-(const vec3 &vector) {
+    this->e[0] = this->e[0] - vector.e[0];
+    this->e[1] = this->e[1] - vector.e[1];
+    this->e[2] = this->e[2] - vector.e[2];
     return *this;
 }
 
@@ -64,7 +67,15 @@ __host__ __device__ vec3 operator+(const vec3 &Vector1, const vec3 &Vector2) {
     return vec3( Vector1.x() + Vector2.x(), Vector1.y() + Vector2.y(), Vector1.z() + Vector2.z());
 }
 
+__host__ __device__ float vec3::magnitude() {
+    return sqrtf( (this->e[0] * this->e[0]) + (this->e[1]*this->e[1]) + (this->e[2]*this->e[2]) );
+}
+
 __device__ vec3 unit_vector(vec3 vector) {
     return vector / vector.magnitude(); //normalize the vector
+}
+
+__device__ float dot_product(vec3 vec1, vec3 vec2) {
+    return (vec1.x() * vec2.x()) + (vec1.y() * vec2.y()) + (vec1.z() * vec2.z());
 }
 

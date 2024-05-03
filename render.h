@@ -12,7 +12,6 @@
 
 void mainLoop(SDL_Window *,vec3 *);
 bool Input();
-//void preDraw();
 float* vecToFb(vec3*);
 void Draw(SDL_Window*, vec3 *);
 

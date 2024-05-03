@@ -2,7 +2,6 @@
 
 
 __global__ void render(vec3 *frameBuffer, int pixels_x, int pixels_y , vec3 lower_left_corner, vec3 horizontal, vec3 vertical, vec3 origin) {
-    //frameBuffer[0] = 0.2;
 
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
@@ -10,14 +9,15 @@ __global__ void render(vec3 *frameBuffer, int pixels_x, int pixels_y , vec3 lowe
 
     int pixel_index = j*pixels_x + i;
 
-    float u = float(i) / float(pixels_x);
-    float v = float(j) / float(pixels_y);
+    float u = float(i) / float(pixels_x);//ratio representing the position of u
+    float v = float(j) / float(pixels_y);//ratio representing the position of v
+
+
+    //define rays as starting from the origin, and their direction
+    //is dependant on the current UV coordinates (like a crt raster scan across display)
     ray r(origin, lower_left_corner + u*horizontal + v*vertical);
 
     frameBuffer[pixel_index] = colour(r);
-    //overload assignment
-    //(frameBuffer[pixel_index]) = vec3(float(i) / pixels_x, float(j) / pixels_y, 0.2f);
-
 }
 
 
@@ -25,17 +25,19 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
     if (result) {
         std::cerr << "CUDA error = " << static_cast<unsigned int>(result) << " at " <<
         file << ":" << line << " '" << func << "' \n";
+        
         // Make sure we call CUDA Device Reset before exiting
         cudaDeviceReset();
         exit(99);
     }
 }
 
-void* allocateFb(vec3* d_fb) {
-    int num_pixels = nx*ny;
+void* allocateFb(vec3* d_fb, int width, int height) {
+    int num_pixels = width*height;
     size_t fb_size = num_pixels*sizeof(vec3);
 
     checkCudaErrors(cudaMalloc((void**)&d_fb, fb_size));
+
     //std::cout << d_fb << "\n";
     //checkCudaErrors(cudaMallocManaged((void **)&d_fb, fb_size));
 
@@ -47,23 +49,15 @@ void renderBuffer(vec3* d_fb, int tx, int ty) {
     dim3 blocks(nx/tx+1,ny/ty+1);
     dim3 threads(tx,ty);
 
-     
-   /* int num_pixels = nx*ny;
-    size_t fb_size = 3*num_pixels*sizeof(float);
-
-    checkCudaErrors(cudaMalloc((void**)&d_fb, fb_size));*/
-    //d_fb = (float*)allocateFb(d_fb);
-
-
+    //to a 4 by 3 aspect ratio window/ 3d space
     render<<<blocks, threads>>>(d_fb, nx, ny,
-                                vec3(-2.0, -1.0, -1.0),
-                                vec3(4.0, 0.0, 0.0),
-                                vec3(0.0, 2.0, 0.0),
-                                vec3(0.0, 0.0, 0.0));
+                                vec3(-4.0, -3.0, -1.0),//lowest left point of 3d space
+                                vec3(8.0, 0.0, 0.0),//the width of space (pos and neg)
+                                vec3(0.0, 6.0, 0.0),//height of the space
+                                vec3(0.0, 0.0, 0.0));// where the origin is defined
 
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
-    //checkCudaErrors(cudaMemcpy(h_fb,d_fb,fb_size, cudaMemcpyDeviceToHost));
 
 }
 
@@ -85,11 +79,44 @@ void transferMem(vec3* h_fb,vec3* d_fb) {
 
 }
 
-
+//determinies the colour of the pixel once the ray is cast
 __device__ vec3 colour(const ray &r) {
     
+    //distance of sphere from screen(z - component)
+    if(hit_sphere(vec3(0.0f,0.0f,-1.0f), 0.5f, r)) {
+        return vec3(1.0f, 0.0f, 0.0f);
+    }
+    
     vec3 unit_direction = unit_vector(r.direction());
-
     float t = 0.5f * (unit_direction.y() + 1.0f);
     return (1.0f - t) * vec3(1.0f, 1.0f, 1.0f) + t*vec3(0.5f, 0.7f, 1.0f);
+}
+
+
+//checking if way hits the sphere
+__device__ bool hit_sphere(const vec3 &center, float Radius,ray r) {
+    //from the textbook formulala
+
+    // (A - C) , point/origin difference from center
+    vec3 distance = r.origin() - center;
+
+    // vector form t*t*dot(B,B) + 2*t*dot(A-C,A-C) + dot(C,C) - R*R = 0
+    // to the form at^2 + bt + c
+
+    // dot(B,B)
+    float a = dot_product(r.direction(),r.direction());
+
+    //2*dot(A-C,A-C)
+    float b = 2.0f * dot_product( distance, distance);
+
+    // dot(A-C,A-C) - R^2
+    float c = dot_product(center, center) - Radius*Radius;
+
+    //disriminant (b^2 - 4ac):
+    // < 0 no solutions
+    // == 0 one solution
+    // > 1 two solutions
+    float discriminant = b*b  - 4 *a*c;
+    return (discriminant > 0);
+
 }

@@ -10,12 +10,13 @@
 #define nx 640
 #define ny 480
 
-void* allocateFb(vec3*);
+void* allocateFb(vec3*, int, int);
 
 void renderBuffer(vec3*,int,int);
 void freeGPU(vec3*);
 void transferMem(vec3*,vec3*);
 
 __device__ vec3 colour(const ray&);
+__device__ bool hit_sphere(const vec3&, float, ray);
 
 #endif
