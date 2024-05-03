@@ -1,15 +1,14 @@
 #include "ray.h"
 
 __device__ ray::ray() {
-    this->A = vec3(0.1f, 0.1f, 0.1f);
-    this->B = vec3(0.1f, 0.1f, 0.2f);
+    //this->A = vec3(0.1f, 0.1f, 0.1f);
+    //this->B = vec3(0.1f, 0.1f, 0.2f);
 }
 
 __device__ ray::ray(const vec3& a, const vec3& b) { 
     this->A = a;
     this->B = b;
 }
-
 
 __device__ vec3 ray::origin() const {
     return this->A;

@@ -1,7 +1,10 @@
+#ifndef __render_h__
+#define __render_h__
+
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <GL/gl.h>
-#include "vec3.h"
+#include "gpu.h"
 
 #define bool int
 #define false 0u
@@ -12,3 +15,5 @@ bool Input();
 //void preDraw();
 float* vecToFb(vec3*);
 void Draw(SDL_Window*, vec3 *);
+
+#endif

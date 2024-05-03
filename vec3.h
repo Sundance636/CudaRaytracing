@@ -1,9 +1,9 @@
-#ifndef __vec_h__
-#define __vec_h__
+#ifndef __vec3_h__
+#define __vec3_h__
 
 #include <cuda.h>
 #include <cuda_runtime.h>
-
+#include <math.h>
 
 
 class vec3 {
@@ -24,8 +24,19 @@ class vec3 {
         //__host__ __device__ vec3 operator*(float);//define scaling vectors
         __host__ __device__ vec3 operator+(const vec3 &vector);//vector addition
         //__host__ __device__ vec3 operator*( const vec3 &vector, float scalar);
+
+        __host__ __device__ float magnitude();
+        __host__ __device__ vec3 normalize();
 };
 
+//vector overload defs
+__host__ __device__ vec3 operator*(const vec3&, float);
+__host__ __device__ vec3 operator*(float, const vec3&);
+__host__ __device__ vec3 operator/(const vec3&, float);
+__host__ __device__ vec3 operator/(float, const vec3&);
+__host__ __device__ vec3 operator+(const vec3&, const vec3&);
 
+//Vector operations
+__device__ vec3 unit_vector(vec3);
 
 #endif

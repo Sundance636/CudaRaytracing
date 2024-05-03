@@ -1,5 +1,9 @@
+#ifndef __gpu_h__
+#define __gpu_h__
+
 #include <iostream>
 #include "vec3.h"
+#include "ray.h"
 
 #define checkCudaErrors(val) check_cuda( (val), #val, __FILE__, __LINE__ )
 
@@ -11,3 +15,7 @@ void* allocateFb(vec3*);
 void renderBuffer(vec3*,int,int);
 void freeGPU(vec3*);
 void transferMem(vec3*,vec3*);
+
+__device__ vec3 colour(const ray&);
+
+#endif

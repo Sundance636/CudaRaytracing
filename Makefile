@@ -42,4 +42,4 @@ profile:
 
 clean:
 	rm ./*.o
-	rm ./$(BIN)
+	
