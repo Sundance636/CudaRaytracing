@@ -20,7 +20,7 @@ __device__ vec3 ray::direction() const {
     return this->B;
 }
 
-//basically parameterizing the path the ray takes so -> p(t) (whee B is direction)
+//basically parameterizing the path the ray takes so -> p(t) (where B is direction)
 __device__ vec3 ray::point_at_parameter(float t) const {
     return (this->A) + t*(this->B);
 }

@@ -17,6 +17,6 @@ void freeGPU(vec3*);
 void transferMem(vec3*,vec3*);
 
 __device__ vec3 colour(const ray&);
-__device__ bool hit_sphere(const vec3&, float, ray);
+__device__ float hit_sphere(const vec3&, float, ray);
 
 #endif

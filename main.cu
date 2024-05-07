@@ -51,7 +51,7 @@ void renderBuffer(vec3* d_fb, int tx, int ty) {
 
     //to a 4 by 3 aspect ratio window/ 3d space
     render<<<blocks, threads>>>(d_fb, nx, ny,
-                                vec3(-4.0, -3.0, -1.0),//lowest left point of 3d space
+                                vec3(-4.0, -3.0, 0.0),//lowest left point of 3d space
                                 vec3(8.0, 0.0, 0.0),//the width of space (pos and neg)
                                 vec3(0.0, 6.0, 0.0),//height of the space
                                 vec3(0.0, 0.0, 0.0));// where the origin is defined
@@ -81,23 +81,35 @@ void transferMem(vec3* h_fb,vec3* d_fb) {
 
 //determinies the colour of the pixel once the ray is cast
 __device__ vec3 colour(const ray &r) {
+    vec3 sphereCenter = vec3(0.0f,0.0f,-1.0f);
+
+    float t = hit_sphere(sphereCenter, 0.5f, r);
     
-    //distance of sphere from screen(z - component)
-    if(hit_sphere(vec3(0.0f,0.0f,-1.0f), 0.5f, r)) {
-        return vec3(1.0f, 0.0f, 0.0f);
+    
+    //distance of sphere from screen(z - component), t positive for infront
+    if(t > 0.0 ) {
+        //point on the sphere
+        //so get the surface normal at that point
+
+        //return vec3(1.0f, 0.0f, 0.0f);
+        vec3 spherePoint = r.point_at_parameter(t);
+        vec3 surfaceNormal = spherePoint - sphereCenter;
+        surfaceNormal = unit_vector(surfaceNormal);
+
+        return 0.5f * vec3(surfaceNormal.x() + 1.0f, surfaceNormal.y() + 1.0f, surfaceNormal.z()+1.0f);
     }
     
     vec3 unit_direction = unit_vector(r.direction());
-    float t = 0.5f * (unit_direction.y() + 1.0f);
+    t = 0.5f * (unit_direction.y() + 1.0f);
     return (1.0f - t) * vec3(1.0f, 1.0f, 1.0f) + t*vec3(0.5f, 0.7f, 1.0f);
 }
 
 
 //checking if way hits the sphere
-__device__ bool hit_sphere(const vec3 &center, float Radius,ray r) {
+__device__ float hit_sphere(const vec3 &center, float Radius,ray r) {
     //from the textbook formulala
 
-    // (A - C) , point/origin difference from center
+    // (A - C) , point/origin difference from center of sphere
     vec3 distance = r.origin() - center;
 
     // vector form t*t*dot(B,B) + 2*t*dot(A-C,A-C) + dot(C,C) - R*R = 0
@@ -117,6 +129,18 @@ __device__ bool hit_sphere(const vec3 &center, float Radius,ray r) {
     // == 0 one solution
     // > 1 two solutions
     float discriminant = b*b  - 4 *a*c;
+
     return (discriminant > 0);
+
+
+    //bad
+    if(discriminant < 0) {
+        return -1.0f;
+    }
+    else {
+        //solve for 't' using the quadratic formula ( - for the closest point)
+        return ((-1.0f * b) - sqrt(discriminant)) / (2.0f*a);
+    }
+    
 
 }
