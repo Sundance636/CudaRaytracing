@@ -37,14 +37,14 @@ __host__ __device__ vec3 vec3::operator+(const vec3 &vector) {
     this->e[0] = this->e[0] + vector.e[0];
     this->e[1] = this->e[1] + vector.e[1];
     this->e[2] = this->e[2] + vector.e[2];
-    return vec3(this->e[0], this->e[1], this->e[2]);
+    return *this;
 }
 
 __host__ __device__ vec3 vec3::operator-(const vec3 &vector) {
     this->e[0] = this->e[0] - vector.e[0];
     this->e[1] = this->e[1] - vector.e[1];
     this->e[2] = this->e[2] - vector.e[2];
-    return vec3(this->e[0], this->e[1], this->e[2]);
+    return *this;
 }
 
 __host__ __device__ vec3 operator*(const vec3 &v, float t) {

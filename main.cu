@@ -1,7 +1,7 @@
 #include "gpu.h"
 
 
-__global__ void render(vec3 *frameBuffer, int pixels_x, int pixels_y , vec3 lower_left_corner, vec3 horizontal, vec3 vertical, vec3 origin) {
+__global__ void render(vec3 *frameBuffer, int pixels_x, int pixels_y , vec3 lower_left_corner, vec3 horizontal, vec3 vertical, vec3 origin, entity** world) {
 
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
@@ -17,9 +17,30 @@ __global__ void render(vec3 *frameBuffer, int pixels_x, int pixels_y , vec3 lowe
     //is dependant on the current UV coordinates (like a crt raster scan across display)
     ray r(origin, lower_left_corner + u*horizontal + v*vertical);
 
-    frameBuffer[pixel_index] = colour(r);
+    frameBuffer[pixel_index] = colour(r,world);
 }
 
+__global__ void create_world(entity ** d_list, entity** d_world) {
+    if (threadIdx.x == 0 && blockIdx.x == 0) {
+        *(d_list)   = new sphere(vec3(0,0,-2.0f), 0.5f);
+        *(d_list+1) = new sphere(vec3(0,-100.5f,-1), 100);
+        *d_world    = new entity_list(d_list,2);
+    }
+
+    
+}
+
+void initializeScenes(entity** &d_list, entity** &d_world) {
+
+
+    //checkCudaErrors(cudaMalloc((void**) d_list,(size_t)( 2 * sizeof(entity*)) ));
+    //checkCudaErrors(cudaMalloc((void**) d_world,(size_t)( sizeof(entity*))));
+
+    create_world<<<1,1>>>(d_list,d_world);
+
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+}
 
 void check_cuda(cudaError_t result, char const *const func, const char *const file, int const line) {
     if (result) {
@@ -30,6 +51,23 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
         cudaDeviceReset();
         exit(99);
     }
+}
+
+void** allocateList(entity** d_list, size_t size) {
+    size =  2 * sizeof(entity*);
+
+    checkCudaErrors(cudaMalloc( (void**) &d_list, size ));
+
+
+    return (void**)d_list;
+}
+
+void** allocateWorld(entity** d_world, size_t size) {
+    size = sizeof(entity*);
+        checkCudaErrors( cudaMalloc((void**) &d_world, size) );
+
+
+    return (void**)d_world;
 }
 
 void* allocateFb(vec3* d_fb, int width, int height) {
@@ -44,26 +82,35 @@ void* allocateFb(vec3* d_fb, int width, int height) {
     return d_fb;
 }
 
-void renderBuffer(vec3* d_fb, int tx, int ty) {
+void renderBuffer(vec3* d_fb, int tx, int ty, entity** d_world) {
     // Render our buffer
     dim3 blocks(nx/tx+1,ny/ty+1);
     dim3 threads(tx,ty);
 
     //to a 4 by 3 aspect ratio window/ 3d space
     render<<<blocks, threads>>>(d_fb, nx, ny,
-                                vec3(-4.0, -3.0, 0.0),//lowest left point of 3d space
+                                vec3(-4.0, -3.0, -4.0),//lowest left point of 3d space
                                 vec3(8.0, 0.0, 0.0),//the width of space (pos and neg)
                                 vec3(0.0, 6.0, 0.0),//height of the space
-                                vec3(0.0, 0.0, 0.0));// where the origin is defined
+                                vec3(0.0, 0.0, 0.0),
+                                d_world);// where the origin is defined
 
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
 }
 
-void freeGPU(vec3* d_fb) {
+void freeGPU(vec3* d_fb,entity** d_list, entity** d_world) {
     checkCudaErrors(cudaFree(d_fb));
+    
+    free_world<<<1,1>>>(d_list,d_world);
 
+}
+
+__global__ void free_world(entity **d_list, entity **d_world) {
+   delete *(d_list);
+   delete *(d_list+1);
+   delete *d_world;
 }
 
 void transferMem(vec3* h_fb,vec3* d_fb) {
@@ -80,14 +127,15 @@ void transferMem(vec3* h_fb,vec3* d_fb) {
 }
 
 //determinies the colour of the pixel once the ray is cast
-__device__ vec3 colour(const ray &r) {
-    vec3 sphereCenter = vec3(0.0f,0.0f,-1.0f);
+__device__ vec3 colour(const ray &r,entity** world) {
+    //vec3 sphereCenter = vec3(0.0f,0.0f,-1.0f);
+    hit_record rec;
 
-    float t = hit_sphere(sphereCenter, 0.5f, r);
+    float t = 0.0;//hit_sphere(sphereCenter, 0.5f, r);
     
     
     //distance of sphere from screen(z - component), t positive for infront
-    if(t > 0.0 ) {
+   /* if(t > 0.0 ) {
         //point on the sphere
         //so get the surface normal at that point
 
@@ -97,6 +145,9 @@ __device__ vec3 colour(const ray &r) {
         surfaceNormal = unit_vector(surfaceNormal);
 
         return 0.5f * vec3(surfaceNormal.x() + 1.0f, surfaceNormal.y() + 1.0f, surfaceNormal.z()+1.0f);
+    }*/
+    if((*world)->hit(r,0.0f, __FLT_MAX__, rec)) {
+        return 0.5f*vec3(rec.normal.x()+1.0f, rec.normal.y()+1.0f, rec.normal.z()+1.0f);
     }
     
     vec3 unit_direction = unit_vector(r.direction());

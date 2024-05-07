@@ -34,6 +34,9 @@ int main() {
     vec3 *h_fb = nullptr;
     vec3 *d_fb = nullptr;
 
+    //pointers for world/scene
+    entity** d_list = nullptr;//list of entities in the scene
+    entity** d_world = nullptr;//holds the entities
 
     int num_pixels = nx*ny;
     size_t fb_size = num_pixels*sizeof(vec3);
@@ -42,18 +45,25 @@ int main() {
 
     h_fb = (vec3*)malloc(fb_size);
     d_fb = (vec3*)allocateFb(d_fb, nx, ny);
+    
+
+    d_list = (entity**)allocateList(d_list,(size_t)0);
+    d_world =  (entity**)allocateWorld(d_world,(size_t)0);
+
+    initializeScenes(d_list,d_world);
 
 
     // Render our buffer
-    renderBuffer(d_fb, tx, ty);
+    renderBuffer(d_fb, tx, ty, d_world);
     transferMem(h_fb, d_fb);//transfer mem from device to host
-
+   /* */
 
     mainLoop(applicationWindow,h_fb);
 
     //deallocates
-    freeGPU(d_fb);
+    freeGPU(d_fb,d_list,d_world);
     free(h_fb);
+    
 
     //cleaning nd quit routine
     SDL_DestroyWindow(applicationWindow);

@@ -8,7 +8,7 @@
 
 class vec3 {
     private:
-    float e[3];
+        float e[3];
 
 
     public:
@@ -28,6 +28,7 @@ class vec3 {
 
         __host__ __device__ float magnitude();
         __host__ __device__ vec3 normalize();
+        
 };
 
 //vector overload defs
